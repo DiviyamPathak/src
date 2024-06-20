@@ -1,0 +1,3 @@
+ifndef xen
+vio9p*  at virtio?                      # Virtio 9P device
+endif

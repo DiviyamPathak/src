@@ -342,7 +342,7 @@ findroot(void)
 
 	if (booted_device)
 		return;
-
+	aprint_bootinfo();
 	if (lookup_bootinfo(BTINFO_NETIF) != NULL) {
 		/*
 		 * We got netboot interface information, but device_register()

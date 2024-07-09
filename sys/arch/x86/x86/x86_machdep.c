@@ -143,7 +143,7 @@ void btinfo_print_rootdevice(struct btinfo_rootdevice *bic);
 void btinfo_print_bootdisk(struct btinfo_bootdisk *bic);
 void btinfo_print_netif(struct btinfo_netif *bic);
 void btinfo_print_console(struct btinfo_console *bic);
-void btinfo_print_biosgeom(void);
+void btinfo_print_biosgeom(struct btinfo_biosgeom *bic);
 void btinfo_print_symtab(struct btinfo_symtab *bic);
 void btinfo_print_memmap(struct btinfo_memmap *bic);
 void btinfo_print_bootwedge(struct btinfo_bootwedge *bic);
@@ -190,16 +190,12 @@ aprint_bootinfo(void)
 	int i;
 	struct btinfo_common *bic;
 
-	aprint_normal("bootinfo:");
+	aprint_normal("bootinfo:\n");
 	bic = (struct btinfo_common *)(bootinfo.bi_data);
 	for (i = 0; i < bootinfo.bi_nentries; i++) {
-		// if (bic->type >= 0 && bic->type < __arraycount(btinfo_str))
-		// 	aprint_normal(" %s, %d ", btinfo_str[bic->type],bic->type);
-
-		// else
-		// 	aprint_normal(" %d", bic->type);
-
-		switch (bic->type) {
+		if (bic->type >= 0 && bic->type < __arraycount(btinfo_str)) {
+			// aprint_normal(" %s, %d ", btinfo_str[bic->type],bic->type);
+			switch (bic->type) {
 			case BTINFO_BOOTPATH:
 				btinfo_print_bootpath((struct btinfo_bootpath *)bic);
 				break;
@@ -216,7 +212,7 @@ aprint_bootinfo(void)
 				btinfo_print_console((struct btinfo_console *)bic);
 				break;
 			case BTINFO_BIOSGEOM:
-				btinfo_print_biosgeom();
+				btinfo_print_biosgeom((struct btinfo_biosgeom *)bic);
 				break;
 			case BTINFO_SYMTAB:
 				btinfo_print_symtab((struct btinfo_symtab *)bic);
@@ -234,79 +230,87 @@ aprint_bootinfo(void)
 				btinfo_print_userconfcommands((struct btinfo_userconfcommands *)bic);
 				break;
 			default:
-				aprint_normal("no case ");
+				aprint_normal("unhandled type %d", bic->type);
 				break;
 			}
-			bic = (struct btinfo_common *)((uint8_t *)bic + bic->len);
-		}
-	
+		
+		} else
+			aprint_normal("invalid type %d", bic->type);
+
 		aprint_normal("\n");
-		}
+		bic = (struct btinfo_common *)((uint8_t *)bic + bic->len);
+	}
+
+		
+}
 
 
 
 void btinfo_print_bootpath(struct btinfo_bootpath *bic) {
-	struct btinfo_bootpath *bip = (struct btinfo_bootpath *)bic;
-	aprint_normal("bootpath %s ", bip->bootpath);
+	aprint_normal("bootpath %s", bic->bootpath);
 }
 
 void btinfo_print_rootdevice(struct btinfo_rootdevice *bic) {
-	struct btinfo_rootdevice *bird = (struct btinfo_rootdevice *)bic;
-	aprint_normal("rootdevice %s ", bird->devname);
+	aprint_normal("rootdevice %s", bic->devname);
 }
 
 void btinfo_print_bootdisk(struct btinfo_bootdisk *bic) {
-	struct btinfo_bootdisk *bibd = (struct btinfo_bootdisk *)bic;
-	aprint_normal("bootdisk %s ", bibd->label.packname);
+	//XXX_struct all fields
+	aprint_normal("bootdisk %s", bic->label.packname);
 }
 
 void btinfo_print_netif(struct btinfo_netif *bic) {
-	struct btinfo_netif *binetif = (struct btinfo_netif *)bic;
-	aprint_normal("network interface \n %s ", binetif->ifname);
+	//XXX ifname is ok print bus as iso or pci, print iobase or tag
+	aprint_normal("network interface %s\n", bic->ifname);
+	switch (bic->bus) {
+	case BI_BUS_ISA:
+		aprint_normal("isa iobase %#x", bic->addr.iobase);
+		break;
+	case BI_BUS_PCI:
+		aprint_normal("pci tag %#x", bic->addr.tag);
+		break;
+	default:
+		aprint_normal("inavlid bus type %d", bic->bus);
+		break;
+	}
 }
 
 void btinfo_print_console(struct btinfo_console *bic) {
-	struct btinfo_console *bicon = (struct btinfo_console *)bic;
-	aprint_normal("console %s ", bicon->devname);
+	aprint_normal("console %s addr %#x speed %d", bic->devname, bic->addr, bic->speed);
 }
 
-void btinfo_print_biosgeom(void) {
-	aprint_normal(" BIOS geometry");
+void btinfo_print_biosgeom(struct btinfo_biosgeom *bic) {
+	aprint_normal("biosgeom %d entries", bic->num);
 }
 
 void btinfo_print_symtab(struct btinfo_symtab *bic) {
-	struct btinfo_symtab *bisymtab = (struct btinfo_symtab *)bic;
-	aprint_normal(" symbol table: nsym=%d", bisymtab->nsym);
+	aprint_normal("symbol table: nsym=%d", bic->nsym);
 }
 
 void btinfo_print_memmap(struct btinfo_memmap *bic) {
-	struct btinfo_memmap *bimemmap = (struct btinfo_memmap *)bic;
-	aprint_normal(" memory map:num=%d", bimemmap->num);
-	for (int j = 0; j < bimemmap->num; j++) {
-		struct bi_memmap_entry *entry = &bimemmap->entry[j];
-		aprint_normal(" entry %d: addr=%lu, size=%lu, type=%d", j, entry->addr, entry->size, entry->type);
+	aprint_normal("memory map:num=%d", bic->num);
+	for (int j = 0; j < bic->num; j++) {
+		struct bi_memmap_entry *entry = &bic->entry[j];
+		aprint_normal("  entry %d: addr=%lu, size=%lu, type=%d", j, entry->addr, entry->size, entry->type);
 	}
 }
 
 void btinfo_print_bootwedge(struct btinfo_bootwedge *bic) {
-    	struct btinfo_bootwedge *bibw = (struct btinfo_bootwedge *)bic;
-    	aprint_normal(" boot wedge %d", bibw->biosdev);
+    	aprint_normal("boot wedge %d", bic->biosdev);
 }
 
 void btinfo_print_modulelist(struct btinfo_modulelist *bic) {
-    	struct btinfo_modulelist *biml = (struct btinfo_modulelist *)bic;
-	struct bi_modulelist_entry *modentry = (struct bi_modulelist_entry *)(biml + 1);
-    	aprint_normal(" module list");
-    	for (int j = 0; j < biml->num; j++) {
-        	aprint_normal(" module %d: path=%s", j, modentry[j].path);
+	struct bi_modulelist_entry *modentry = (struct bi_modulelist_entry *)(bic + 1);
+    	aprint_normal("module list");
+    	for (int j = 0; j < bic->num; j++) {
+        	aprint_normal("  module %d: path=%s", j, modentry[j].path);
     	}
 }
  void btinfo_print_userconfcommands(struct btinfo_userconfcommands *bic) {
-	struct btinfo_userconfcommands *biuc = (struct btinfo_userconfcommands *)bic;
-	struct bi_userconfcommand *cmdentry = (struct bi_userconfcommand *)(biuc + 1);
-	aprint_normal(" user configuration commands: num=%d", biuc->num);
-	for (int j = 0; j < biuc->num; j++) {
-		aprint_normal(" command %d: text=%s", j, cmdentry[j].text);
+	struct bi_userconfcommand *cmdentry = (struct bi_userconfcommand *)(bic + 1);
+	aprint_normal("user configuration commands: num=%d", bic->num);
+	for (int j = 0; j < bic->num; j++) {
+		aprint_normal("  command %d: text=%s", j, cmdentry[j].text);
 	}
  }
 

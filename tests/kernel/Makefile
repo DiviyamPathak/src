@@ -20,6 +20,7 @@ TESTS_C+=	t_ksem
 TESTS_C+=	t_sysctl
 TESTS_C+=	t_timeleft
 TESTS_C+=	t_zombie
+TESTS_C+=	t_rootfind
 
 TESTS_SH=	t_umount
 TESTS_SH+=	t_umountstress

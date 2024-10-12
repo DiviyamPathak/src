@@ -203,6 +203,12 @@ options, or via a single option whose argument contains multiple
 space-separated paths.
 .DFLTu
 .
+.It Sy CHECKFLIST_EXTRAPREFIXES
+A space-separated list of absolute prefixes that are used to filter
+allowed extraneous files from the sets lists.  Files whose absolute path starts with one of the prefixes are not considered "extra files in DESTDIR".
+They will be reported as "allowed extra files", however.
+.DFLTu
+.
 .It Sy CONFIGOPTS
 Additional options to
 .Xr config 1

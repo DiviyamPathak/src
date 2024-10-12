@@ -280,6 +280,10 @@ installsets: .PHONY check_DESTDIR sanitise_METALOG
 
 # Should we ignore errors like extra or missing files in the flists?
 SLOPPY_FLIST?= NO
+.if !empty(CHECKFLIST_EXTRAPREFIXES)
+CFEPARGS!= echo "${CHECKFLIST_EXTRAPREFIXES}" | ${TOOL_SED} -Ee 's/(^|[ ])/\1-E /g'
+CHECKFLIST_FLAGS+=	${CFEPARGS}
+.endif
 .if !empty(SLOPPY_FLIST:M[Yy][Ee][Ss])
 CHECKFLIST_FLAGS+=	-e -m
 REGPKG.sloppy=		-m

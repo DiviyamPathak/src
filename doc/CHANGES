@@ -459,3 +459,4 @@ Changes from NetBSD 10.0 to NetBSD 11.0:
 	hppa: Add hyperfb, a driver for HCRX video cards.  [macallan 20240717]
 	checkflist: added '-E /prefix' option and corresponding
 		CHECKFLIST_EXTRAPREFIXES mk.conf(5) variable. [ bad 20241012]
+	src/Makefile: added 'POST_BUILD_HOOKS' [ bad 20241012]

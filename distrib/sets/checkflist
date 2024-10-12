@@ -48,10 +48,11 @@ xargs=""
 dargs=""
 metalog=
 allowextra=false
+allowextraprefixes=""
 allowmissing=false
 
 # handle args
-while getopts xbL:M:em ch; do
+while getopts xbL:M:E:em ch; do
 	case ${ch} in
 	x)
 		xargs="-x"
@@ -67,6 +68,9 @@ while getopts xbL:M:em ch; do
 	M)
 		metalog="${OPTARG}"
 		;;
+	E)
+		allowextraprefixes="${allowextraprefixes} ${OPTARG}"
+		;;
 	e)
 		allowextra=true
 		;;
@@ -80,6 +84,7 @@ Usage: ${prog} [-x|-b|-L lists] [-M metalog] [-e] [-m]
 	-b		check netbsd + x11 lists
 	-L base,x,ext	check specified lists
 	-M metalog	metalog file
+	-E pathprefix	prefix for for files not to be considered extraneous (can be used multiple times)
 	-e		extra files are not considered an error
 	-m		missing files are not considered an error
 USAGE
@@ -236,19 +241,40 @@ check_destdir_missing
 check_destdir_extra()
 {
 if [ -s "${SETS_DESTDIR_EXTRA}" ]; then
-	count="$(${AWK} 'END {print NR}' "${SETS_DESTDIR_EXTRA}")"
+	# do not consider paths beginning with any of the alloexraprefixes
+	# to be extra files.
+	aepfxre='^$' # matches empty lines, of which we have none
+	if [ -n "${allowextraprefixes}" ]; then
+		# note that lines start with a dot '.'.
+		# replace every space but the first with '\|'
+		aepfxre="^\.\($(echo "${allowextraprefixes}" | sed -e 's/^ //;s/ /\\|/g')\)"
+	fi
+	count=$(${GREP} -cv -e "${aepfxre}" "${SETS_DESTDIR_EXTRA}")
+	if [ ${count} -gt 0 ]; then
 	echo ""
 	echo "=======  ${count} extra files in DESTDIR  ========="
 	echo "Files in DESTDIR but missing from flist."
 	echo "File is obsolete or flist is out of date ?"
 	if ${allowextra}; then
-		echo "This is non-fatal, due to '-e' option."
+		echo "This is non-fatal, due to the '-e' option."
 	else
 		es=1
 	fi
 	echo "------------------------------------------"
-	cat "${SETS_DESTDIR_EXTRA}"
+	${GREP} -v -e "${aepfxre}" "${SETS_DESTDIR_EXTRA}"
 	echo "=========  end of ${count} extra files  ==========="
+	echo ""
+	fi
+	# list allowed extra files
+	count=$(${GREP} -c -e "${aepfxre}" "${SETS_DESTDIR_EXTRA}")
+	if [ ${count} -eq 0 ]; then
+		return		# no allowed extra files
+	fi
+	echo "=======  ${count} allowed extra files in DESTDIR  ========="
+	echo "Allowed files in DESTDIR but missing from flist."
+	echo "------------------------------------------"
+	${GREP} -e "${aepfxre}" "${SETS_DESTDIR_EXTRA}"
+	echo "=========  end of ${count} allowed extra files  ==========="
 	echo ""
 fi
 }

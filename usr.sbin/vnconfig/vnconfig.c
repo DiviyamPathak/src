@@ -198,7 +198,7 @@ main(int argc, char *argv[])
 			close(vdisk);
 			return 0;
 		}
-			
+
 		rv = 0;
 		while (--argc >= 0) {
 			vn = *argv++;
@@ -221,7 +221,7 @@ main(int argc, char *argv[])
 static void
 show_unused(int n)
 {
-	if (minimum == 0) 
+	if (minimum == 0)
 		return;
 
 	printf("vnd%d: not in use\n", n);
@@ -431,7 +431,7 @@ static void
 usage(void)
 {
 	const char *p = getprogname();
-	(void)fprintf(stderr, 
+	(void)fprintf(stderr,
 	    "Usage: %s [-cirvz] [-f dsktab] [-t type] vnode_disk"
 		" reg-file [geomspec]\n"
 	    "       %s -u [-Fv] vnode_disk\n"

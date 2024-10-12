@@ -252,6 +252,9 @@ BUILDTARGETS+=	do-x11
 BUILDTARGETS+=	do-build
 BUILDTARGETS+=	do-obsolete
 .endif
+.if defined(POST_BUILD_HOOKS)
+BUILDTARGETS+=	do-post-build-hooks
+.endif
 
 #
 # Enforce proper ordering of some rules.
@@ -494,6 +497,16 @@ do-build: .PHONY .MAKE
 .for targ in dependall install
 	${MAKEDIRTARGET} . ${targ} BUILD_tools=no BUILD_lib=no
 .endfor
+
+do-post-build-hooks: .PHONY .MAKE
+	${_MKMSG} "post build hooks:" ${POST_BUILD_HOOKS:Q}
+	@for hook in ${POST_BUILD_HOOKS}; do \
+		echo "===> post build hook $$hook";  \
+		$$hook || { \
+			rc=$$?; \
+			echo $$hook failed with exit status $$rc 1>&2; \
+			exit $$rc; } \
+	done
 
 do-x11: .PHONY .MAKE
 .if ${MKX11} != "no"

@@ -2478,6 +2478,19 @@ option
 .Fl j
 instead.
 .
+.It Sy POST_BUILD_HOOKS
+A space separated list of hooks to be executed as the last step of the
+.Xr make 1
+.Dq build
+target.
+Hooks must be executable files, either with absolute paths or found through
+.Sy PATH
+.
+A non-zero exit status from any hook will cause the
+.Sy build
+target to fail.
+.DFLTu
+.
 .It Sy SHAREDSTRINGS
 Obsolete.
 .

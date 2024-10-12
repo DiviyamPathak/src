@@ -457,3 +457,5 @@ Changes from NetBSD 10.0 to NetBSD 11.0:
 	aarch64: Switch to binutils 2.42.  [skrll 20240714]
 	hppa: Switch to binutils 2.42.  [skrll 20240715]
 	hppa: Add hyperfb, a driver for HCRX video cards.  [macallan 20240717]
+	checkflist: added '-E /prefix' option and corresponding
+		CHECKFLIST_EXTRAPREFIXES mk.conf(5) variable. [ bad 20241012]
